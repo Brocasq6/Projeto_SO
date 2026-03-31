@@ -1,0 +1,22 @@
+#ifndef PROTOCOL_H
+#define PROTOCOL_H
+
+#include <sys/types.h>
+
+#define SERVER_FIFO "/tmp/controller"
+
+#define MSG_EXECUTE  1  // runner quer executar
+#define MSG_DONE     2  // runner terminou
+#define MSG_STATUS   3  // runner quer lista (-c)
+#define MSG_SHUTDOWN 4  // runner pede shutdown (-s)
+
+typedef struct {
+    pid_t runner_pid;
+    int   user_id;
+    int   command_id;
+    char  command[256];
+    int   msg_type;
+} Message;
+
+
+#endif
