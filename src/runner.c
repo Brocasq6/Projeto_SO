@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include "protocol.h"
 
 int main(int argc, char *argv[]) {
@@ -14,7 +15,7 @@ int main(int argc, char *argv[]) {
 
     // 1. Criar nome e ficheiro da FIFO privada
     char private_fifo[256];
-    sprintf(private_fifo, "/tmp/runner_%d_fifo", getpid());
+    sprintf(private_fifo, "tmp/runner_%d_fifo", getpid());
     if (mkfifo(private_fifo, 0666) == -1) {
         perror("Erro ao criar FIFO privado");
         return 1;
@@ -63,10 +64,44 @@ int main(int argc, char *argv[]) {
     // 5. Lógica de resposta diferente para cada tipo
     if (msg.msg_type == MSG_EXECUTE) {
         char buffer[10];
-        read(fd_private, buffer, sizeof(buffer)); // Espera o "OK"
+        read(fd_private, buffer, sizeof(buffer)); // Espera o "OK" do controller para poder executar o comando
         write(STDOUT_FILENO, "[runner] executing command...\n", 30);
         
-        // TODO: Aqui entrará o fork() e execvp()
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("Erro no fork");
+        } 
+        else if (pid == 0) {
+            // PROCESSO FILHO - (Pega no comando exemplo: "sleep 10" e parte pelos espaços)
+            char *args[64];
+            int i = 0;
+            char *token = strtok(msg.command, " "); // Divide a string em tokens(corta no primeiro espaço)
+            while (token != NULL && i < 63) {
+                args[i] = token; //guardamos os tokens(palavras da string) em posições diferentes do array args
+                i++;
+                token = strtok(NULL, " "); // Continua a dividir a string em tokens(corta no segundo espaço, terceiro, etc)
+            }
+            args[i] = NULL;
+            
+            // O execvp substitui completamente o código/memória deste Processo Filho pela do programa apontado em args[0] (ex: "sleep").
+            // Passamos o array "args" inteiro para o programa novo saber como operar.
+            execvp(args[0], args);
+            perror("Erro a executar o binário"); // Só ocorre erro se não existir o programa
+            exit(1);
+        } 
+        else {
+            // PROCESSO PAI (Runner) - Espera que termine
+            wait(NULL);
+            write(STDOUT_FILENO, "[runner] command finished\n", 26);
+            
+            // Avisa o Controller do término para libertar "vaga"
+            msg.msg_type = MSG_DONE;
+            int final_fd = open(SERVER_FIFO, O_WRONLY);
+            if (final_fd != -1) {
+                write(final_fd, &msg, sizeof(Message));
+                close(final_fd);
+            }
+        }
     } 
     else if (msg.msg_type == MSG_STATUS) {
         char status_buffer[4096]; // Buffer maior para a lista

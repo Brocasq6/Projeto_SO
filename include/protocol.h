@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-#define SERVER_FIFO "/tmp/controller"
+#define SERVER_FIFO "tmp/controller_fifo"
 
 #define MSG_EXECUTE  1  // runner quer executar
 #define MSG_DONE     2  // runner terminou

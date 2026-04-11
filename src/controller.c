@@ -13,8 +13,7 @@ int main() {
         return 1;
     }
 
-    // 2. Abrir para ler os pedidos dos runners [cite: 17, 25]
-    int fd_server = open(SERVER_FIFO, O_RDONLY);
+    int fd_server = open(SERVER_FIFO, O_RDWR);
     
     Message msg;
     // 3. Ficar em loop a receber pedidos [cite: 6, 51]
@@ -23,7 +22,7 @@ int main() {
 
         // 4. DAR AUTORIZAÇÃO (O que o teu runner espera) [cite: 12, 15]
         char private_path[64];
-        sprintf(private_path, "tmp/runner_%d", msg.runner_pid);
+        sprintf(private_path, "tmp/runner_%d_fifo", msg.runner_pid);
         
         int fd_private = open(private_path, O_WRONLY);
         if (fd_private != -1) {
