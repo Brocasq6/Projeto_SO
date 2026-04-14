@@ -2,6 +2,7 @@
 #define PROTOCOL_H
 
 #include <sys/types.h>
+#include <sys/time.h>
 
 #define SERVER_FIFO "tmp/controller_fifo"
 
@@ -16,6 +17,7 @@ typedef struct {
     int   command_id;
     char  command[256];
     int   msg_type;
+    struct timeval start_time;
 } Message;
 
 

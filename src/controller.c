@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/time.h>   
 #include "protocol.h"
 
 // Tamanho máximo das filas
@@ -16,6 +17,7 @@ typedef struct {
     int user_id;
     int command_id;
     char command[256];
+    struct timeval start_time;
 } Job;
 
 // O Escalonador: Arrays do Controller
@@ -99,6 +101,23 @@ int main(int argc, char *argv[]) {
             
             // Eliminar da lista de Execução em tempo real
             if (idx != -1) {
+
+                struct timeval end_time;
+                gettimeofday(&end_time, NULL);
+                long duration = end_time.tv_sec - executing[idx].start_time.tv_sec;
+                long microduration = end_time.tv_usec - executing[idx].start_time.tv_usec;
+                double total_time = duration + microduration * 1e-6;
+
+                int fd_log = open("controller.log", O_WRONLY | O_CREAT | O_APPEND, 0666);
+                if (fd_log !=-1){
+                    char log_entry[512];
+                    int log_len = sprintf(log_entry, "user-id %d - command-id %d - duration %.2f seconds\n", executing[idx].user_id, executing[idx].command_id, total_time);
+                    if(write(fd_log, log_entry, log_len) == -1) {
+                        perror("Erro ao escrever no log");
+                    }
+                    close(fd_log);
+                }
+
                 // Dá Shifts nos outros para a Esquerda
                 for (int i = idx; i < exec_count - 1; i++) {
                     executing[i] = executing[i+1];

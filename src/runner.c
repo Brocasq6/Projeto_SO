@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include "protocol.h"
 
 int main(int argc, char *argv[]) {
@@ -26,6 +27,7 @@ int main(int argc, char *argv[]) {
     msg.runner_pid = getpid();
     
     if (strcmp(argv[1], "-e") == 0 && argc == 4) {
+        gettimeofday(&msg.start_time, NULL); // Marca o tempo de início do comando
         msg.msg_type = MSG_EXECUTE;
         msg.user_id = atoi(argv[2]);
         msg.command_id = rand() % 1000;
