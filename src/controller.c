@@ -41,6 +41,7 @@ void authorize_runner(pid_t runner_pid) {
 }
 
 int main(int argc, char *argv[]) {
+    int shutdown_requested = 0;
     // 0. Interpretar os argumentos de Limitação de Paralelismo
     if (argc >= 2) {
         parallel_limit = atoi(argv[1]);
@@ -61,18 +62,36 @@ int main(int argc, char *argv[]) {
     
     Message msg;
     // LOOP PRINCIPAL (Orquestrador)
-    while (read(fd_server, &msg, sizeof(Message)) > 0) {
-        
+    while (!shutdown_requested || exec_count > 0) {
+        if (read(fd_server, &msg, sizeof(Message))<=0) {
+            if(shutdown_requested && exec_count == 0) {
+                break; // Se pediu shutdown e não há mais comandos a executar, sai do loop
+            }
+            continue;
+
+        }
+
+        if (msg.msg_type == MSG_SHUTDOWN) {
+            shutdown_requested = 1; 
+            // Avisamos o runner que enviou o -s que recebemos o pedido
+            authorize_runner(msg.runner_pid); 
+        }
         // CADEIA DE DECISÃO 1: Foi pedido um novo comando?
         if (msg.msg_type == MSG_EXECUTE) {
             
+            if (shutdown_requested) {
+                continue; 
+            }
+
             // A) Há vagas na Lista de Execução Simultânea?
             if (exec_count < parallel_limit) {
+                
                 // Passa com distinção! Vai diretamente para execução
                 executing[exec_count].runner_pid = msg.runner_pid;
                 executing[exec_count].user_id = msg.user_id;
                 executing[exec_count].command_id = msg.command_id;
                 strncpy(executing[exec_count].command, msg.command, 256);
+                gettimeofday(&executing[exec_count].start_time, NULL);
                 exec_count++;
                 
                 // Emite LUZ VERDE para a resposta daquele RUNNER individual!
@@ -138,6 +157,7 @@ int main(int argc, char *argv[]) {
 
                 // Transfere a responsabilidade para os que estão em "vias de Execução"
                 executing[exec_count] = next_job;
+                gettimeofday(&executing[exec_count].start_time, NULL);
                 exec_count++;
                 
                 // Emite a LUZ VERDE que o coitado do runner novo esteve sempre à espera!
@@ -172,5 +192,6 @@ int main(int argc, char *argv[]) {
     }
 
     close(fd_server);
+    unlink(SERVER_FIFO);
     return 0;
 }
