@@ -42,6 +42,8 @@ void authorize_runner(pid_t runner_pid) {
 
 int main(int argc, char *argv[]) {
     int shutdown_requested = 0;
+    pid_t shutdown_runner_pid = 0; // Guardar quem o pediu
+    
     // 0. Interpretar os argumentos de Limitação de Paralelismo
     if (argc >= 2) {
         parallel_limit = atoi(argv[1]);
@@ -64,17 +66,13 @@ int main(int argc, char *argv[]) {
     // LOOP PRINCIPAL (Orquestrador)
     while (!shutdown_requested || exec_count > 0) {
         if (read(fd_server, &msg, sizeof(Message))<=0) {
-            if(shutdown_requested && exec_count == 0) {
-                break; // Se pediu shutdown e não há mais comandos a executar, sai do loop
-            }
             continue;
-
         }
 
         if (msg.msg_type == MSG_SHUTDOWN) {
             shutdown_requested = 1; 
-            // Avisamos o runner que enviou o -s que recebemos o pedido
-            authorize_runner(msg.runner_pid); 
+            shutdown_runner_pid = msg.runner_pid; // Guarda o bilhete de autorização na algibeira para só ser validado à saída.
+            if (exec_count == 0) break; // Opcional de fuga
         }
         // CADEIA DE DECISÃO 1: Foi pedido um novo comando?
         if (msg.msg_type == MSG_EXECUTE) {
@@ -91,7 +89,7 @@ int main(int argc, char *argv[]) {
                 executing[exec_count].user_id = msg.user_id;
                 executing[exec_count].command_id = msg.command_id;
                 strncpy(executing[exec_count].command, msg.command, 256);
-                gettimeofday(&executing[exec_count].start_time, NULL);
+                executing[exec_count].start_time = msg.start_time; // Copia a hora exata a que o terminal pediu execução! (12 valores)
                 exec_count++;
                 
                 // Emite LUZ VERDE para a resposta daquele RUNNER individual!
@@ -103,6 +101,7 @@ int main(int argc, char *argv[]) {
                 scheduled[sched_count].user_id = msg.user_id;
                 scheduled[sched_count].command_id = msg.command_id;
                 strncpy(scheduled[sched_count].command, msg.command, 256);
+                scheduled[sched_count].start_time = msg.start_time; // Conserva exatamente o tempo na Fila de Chuva! (12 valores)
                 sched_count++;
             }
         } 
@@ -142,6 +141,11 @@ int main(int argc, char *argv[]) {
                     executing[i] = executing[i+1];
                 }
                 exec_count--; //Diminui o número de comandos em execução(Abre vaga)
+
+                // Quebra mágica para impedir o read() final de bloquear no limite:
+                if (shutdown_requested && exec_count == 0) {
+                    break;
+                }
             }
 
             // MAGIA DAS FILAS DE ESPERA: Vamos puxar o da lista Scheduled?
@@ -157,7 +161,6 @@ int main(int argc, char *argv[]) {
 
                 // Transfere a responsabilidade para os que estão em "vias de Execução"
                 executing[exec_count] = next_job;
-                gettimeofday(&executing[exec_count].start_time, NULL);
                 exec_count++;
                 
                 // Emite a LUZ VERDE que o coitado do runner novo esteve sempre à espera!
@@ -193,5 +196,11 @@ int main(int argc, char *argv[]) {
 
     close(fd_server);
     unlink(SERVER_FIFO);
+
+    // Aval final apenas no cemitério do PC após destruírem os Ficheiros
+    if (shutdown_requested && shutdown_runner_pid != 0) {
+        authorize_runner(shutdown_runner_pid);
+    }
+
     return 0;
 }
