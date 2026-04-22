@@ -25,21 +25,28 @@ int main(int argc, char *argv[]) {
     // 2. Preencher a mensagem conforme a flag
     Message msg;
     msg.runner_pid = getpid();
-    
+
+    // Usar o PID como seed para garantir IDs únicos entre runners
+    srand(getpid());
+
     if (strcmp(argv[1], "-e") == 0 && argc == 4) {
-        gettimeofday(&msg.start_time, NULL); // Marca o tempo de início do comando
+        gettimeofday(&msg.start_time, NULL);
         msg.msg_type = MSG_EXECUTE;
         msg.user_id = atoi(argv[2]);
-        msg.command_id = rand() % 1000;
+        msg.command_id = rand() % 100000;
         strncpy(msg.command, argv[3], 256);
-        write(STDOUT_FILENO, "[runner] command submitted\n", 27);
-    } 
+
+        // Notificar utilizador: comando submetido
+        char submitted_msg[64];
+        int len = sprintf(submitted_msg, "[runner] command %d submitted\n", msg.command_id);
+        write(STDOUT_FILENO, submitted_msg, len);
+    }
     else if (strcmp(argv[1], "-c") == 0) {
         msg.msg_type = MSG_STATUS;
-    } 
+    }
     else if (strcmp(argv[1], "-s") == 0) {
         msg.msg_type = MSG_SHUTDOWN;
-    } 
+    }
     else {
         fprintf(stderr, "Erro nos argumentos.\n");
         unlink(private_fifo);
@@ -60,43 +67,49 @@ int main(int argc, char *argv[]) {
     int fd_private = open(private_fifo, O_RDONLY);
     if (fd_private == -1) {
         perror("Erro ao abrir FIFO privado para leitura");
+        unlink(private_fifo);
         return 1;
     }
 
     // 5. Lógica de resposta diferente para cada tipo
     if (msg.msg_type == MSG_EXECUTE) {
         char buffer[10];
-        read(fd_private, buffer, sizeof(buffer)); // Espera o "OK" do controller para poder executar o comando
-        write(STDOUT_FILENO, "[runner] executing command...\n", 30);
-        
+        read(fd_private, buffer, sizeof(buffer)); // Espera o "OK" do controller
+
+        // Notificar utilizador: comando em execução
+        char exec_msg[64];
+        int len = sprintf(exec_msg, "[runner] executing command %d...\n", msg.command_id);
+        write(STDOUT_FILENO, exec_msg, len);
+
         pid_t pid = fork();
         if (pid == -1) {
             perror("Erro no fork");
-        } 
+        }
         else if (pid == 0) {
-            // PROCESSO FILHO - (Pega no comando exemplo: "sleep 10" e parte pelos espaços)
+            // PROCESSO FILHO — divide o comando pelos espaços e executa
             char *args[64];
             int i = 0;
-            char *token = strtok(msg.command, " "); // Divide a string em tokens(corta no primeiro espaço)
+            char *token = strtok(msg.command, " ");
             while (token != NULL && i < 63) {
-                args[i] = token; //guardamos os tokens(palavras da string) em posições diferentes do array args
-                i++;
-                token = strtok(NULL, " "); // Continua a dividir a string em tokens(corta no segundo espaço, terceiro, etc)
+                args[i++] = token;
+                token = strtok(NULL, " ");
             }
             args[i] = NULL;
-            
-            // O execvp substitui completamente o código/memória deste Processo Filho pela do programa apontado em args[0] (ex: "sleep").
-            // Passamos o array "args" inteiro para o programa novo saber como operar.
+
             execvp(args[0], args);
-            perror("Erro a executar o binário"); // Só ocorre erro se não existir o programa
+            perror("Erro a executar o binário");
             exit(1);
-        } 
+        }
         else {
-            // PROCESSO PAI (Runner) - Espera que termine
+            // PROCESSO PAI — espera que o filho termine
             wait(NULL);
-            write(STDOUT_FILENO, "[runner] command finished\n", 26);
-            
-            // Avisa o Controller do término para libertar "vaga"
+
+            // Notificar utilizador: comando terminado
+            char fin_msg[64];
+            int flen = sprintf(fin_msg, "[runner] command %d finished\n", msg.command_id);
+            write(STDOUT_FILENO, fin_msg, flen);
+
+            // Avisar o controller que a vaga ficou livre
             msg.msg_type = MSG_DONE;
             int final_fd = open(SERVER_FIFO, O_WRONLY);
             if (final_fd != -1) {
@@ -104,13 +117,19 @@ int main(int argc, char *argv[]) {
                 close(final_fd);
             }
         }
-    } 
+    }
     else if (msg.msg_type == MSG_STATUS) {
-        char status_buffer[4096]; // Buffer maior para a lista
+        char status_buffer[4096];
         int bytes = read(fd_private, status_buffer, sizeof(status_buffer));
         write(STDOUT_FILENO, status_buffer, bytes);
     }
     else if (msg.msg_type == MSG_SHUTDOWN) {
+        // Três mensagens obrigatórias conforme o enunciado
+        write(STDOUT_FILENO, "[runner] sent shutdown notification\n", 36);
+        write(STDOUT_FILENO, "[runner] waiting for controller to shutdown...\n", 47);
+        // Lê da FIFO privada — bloqueia até o controller confirmar a saída
+        char buf[4];
+        read(fd_private, buf, sizeof(buf));
         write(STDOUT_FILENO, "[runner] controller exited.\n", 28);
     }
 
