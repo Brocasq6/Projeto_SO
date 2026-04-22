@@ -8,6 +8,54 @@
 #include <sys/time.h>
 #include "protocol.h"
 
+/*
+struct que representa um segmento de um pipeline 
+
+por exemplo o comando "grep system /etc/passwd | wc -l > out.txt"
+separa-se em dois segmentos
+
+segmento 1 : " args=["grep","system","/etc/passwd"], stdin_file = NULL, stdout_file = NULL "
+segmento 2 : " args=["wc","-l"], stdin_file = NULL, stdout_file = "out.txt" "
+*/
+
+typedef struct runner
+{
+    char *args[64];
+    int argc;
+    char *stdin_file;  // ficheiro para < (ou NULL)
+    char *stdout_file; // ficheiro para > (ou NULL)
+    char *stdder_file; // ficheiro para 2> (ou NULL)
+} Segment;
+/*
+    funcao parse_command:
+        Partir o comando em tokens respeitando espaços,
+        depois agrupar em segmentos separados por '|'
+        e detetar operadores >, 2>, <
+*/
+int parse_command( char *commands , Segment *segments) { 
+    // a implementar
+}
+
+// funcão executar_pipeline
+
+void exec_pipeline(Segment *segments , int number_segments){
+    
+    int pipes[64][2];
+    
+    // Criar os pipes necessários
+    for (int i = 0; i < number_segments - 1; i++)
+    {
+        if (pipe(pipes[i]) == -1)
+        {
+            perror("Erro ao criar o Pipe");
+            exit(1);
+        }
+        
+    }
+    
+    // Lançar um processo filho por segmento
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso: ./runner [-e <id> \"cmd\" | -c | -s]\n");
