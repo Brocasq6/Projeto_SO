@@ -50,10 +50,101 @@ void exec_pipeline(Segment *segments , int number_segments){
             perror("Erro ao criar o Pipe");
             exit(1);
         }
-        
     }
     
     // Lançar um processo filho por segmento
+
+    for (int i = 0; i < number_segments; i++)
+    {
+        pid_t pid = fork();
+
+        if (pid == -1)
+        {
+            perror("Erro no fork da pipeline");
+            exit(1);
+        }
+
+
+        if (pid == 0)
+        {
+            // processo filho
+
+            // Redireccionamento de stdin via ficheiro (<)
+            if (segments[i].stdin_file != NULL)
+            {
+                int file_descriptor = open(segments[i].stdin_file , O_RDONLY);
+                if (file_descriptor == -1)
+                {
+                    perror("Erro ao abrir ficheiro de entrada");
+                    exit(1);
+                }
+                dup2(file_descriptor,STDOUT_FILENO);
+                close(file_descriptor);
+            }
+
+            // Redireccionamento de stdin via ficheiro (>)
+            if (segments[i].stdout_file != NULL)
+            {
+                int file_descriptor = open(segments[i].stdder_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                
+                if (file_descriptor == -1) 
+                { 
+                    perror("Erro ao abrir ficheiro de saída"); 
+                    exit(1); 
+                }
+                dup2(file_descriptor, STDOUT_FILENO);
+                close(file_descriptor);
+            }
+            
+            // Redireccionamento de stdin via ficheiro (2>)
+            if (segments[i].stdder_file != NULL)
+            {
+                int file_descriptor = open(segments[i].stdder_file, O_WRONLY | O_CREAT | O_TRUNC, 0666)
+
+                if(file_descriptor == -1) 
+                { 
+                    perror("Erro ao abrir ficheiro de erros"); 
+                    exit(1); 
+                }
+                dup2(file_descriptor, STDERR_FILENO);
+                close(file_descriptor);
+            }
+
+            // Ligar stdin ao pupe do segmento anterior caso nao seja o primeiro
+            if (i > 0)
+            {
+                dup2(pipes[i-1][0], STDIN_FILENO);
+            }
+
+            // Ligar stdout ao pipe do segmento seguinte (se não for o último)
+            if (i < number_segments - 1) {
+                dup2(pipes[i][1], STDOUT_FILENO);
+            }
+            // Fechar TODOS os descritores de pipe neste filho
+            // (o filho só deve usar os que foram redirecionados via dup2)
+            for (int j = 0; j < number_segments - 1; j++) {
+                close(pipes[j][0]);
+                close(pipes[j][1]);
+            }
+            execvp(segments[i].args[0], segments[i].args);
+            perror("Erro a executar o binário");
+            exit(1);
+        }
+        
+    }
+    
+    // ── PROCESSO PAI (Runner) ──
+    
+    // Fechar todos os pipes no pai — os filhos é que os usam
+    for (int i = 0; i < number_segments - 1; i++) {
+        close(pipes[i][0]);
+        close(pipes[i][1]);
+    }
+
+    // Esperar que todos os filhos terminem
+    for (int i = 0; i < number_segments; i++) {
+        wait(NULL);
+    }
 }
 
 int main(int argc, char *argv[]) {
