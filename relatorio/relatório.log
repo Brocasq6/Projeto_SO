@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.3.1)  21 APR 2026 15:36
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.3.1)  22 APR 2026 10:01
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -243,9 +243,6 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 51.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [1{/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}
 
@@ -260,13 +257,13 @@ L3 programming layer <2025-01-18>
 Here is how much of TeX's memory you used:
  2577 strings out of 473190
  40692 string characters out of 5715801
- 435819 words of memory out of 5000000
+ 437819 words of memory out of 5000000
  25824 multiletter control sequences out of 15000+600000
  562681 words of font info for 41 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  59i,6n,67p,282b,182s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on relatório.pdf (2 pages, 94983 bytes).
+Output written on relatório.pdf (2 pages, 103080 bytes).
 PDF statistics:
  34 PDF objects out of 1000 (max. 8388607)
  19 compressed objects within 1 object stream

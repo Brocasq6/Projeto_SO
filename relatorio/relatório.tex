@@ -49,6 +49,25 @@
         \end{center}
 
         \section{Introdução}
+        No contexto da unidade curricular de Sistemas Operativos, foi proposto o desenvolvimento de um ambiente
+        de orquestração de execução de comandos, com o objetivo de aplicar conhecimentos sobre processos, comunicação
+        entre processos e manipulação de ficheiros no sistema operativo Linux.
+
+        O sistema é composto por dois componentes principais: um controlador (controller), responsável por gerir e 
+        escalonar os pedidos de execução recebidos, e um executor (runner), que permite ao utilizador submeter comandos 
+        e consultar o estado do sistema através da linha de comandos. A comunicação entre ambos é realizada exclusivamente 
+        através de pipes com nome (named pipes / FIFOs), recorrendo a chamadas ao sistema fornecidas pelo Linux.
+
+        Entre as funcionalidades implementadas, destacam-se a submissão e escalonamento de comandos, a consulta 
+        de comandos em execução e em espera, e o registo persistente da atividade do sistema. Para além destas 
+        funcionalidades base, o projeto inclui também suporte a operadores da linha de comandos, nomeadamente 
+        redirecionamento e pipes entre processos, execução paralela de múltiplos comandos com um grau de paralelismo 
+        configurável, e avaliação experimental de diferentes políticas de escalonamento.
+        
+        Este relatório descreve a arquitetura do sistema, as decisões de implementação adotadas, 
+        os mecanismos de comunicação utilizados e os testes realizados, incluindo uma análise comparativa 
+        do impacto das políticas de escalonamento e das configurações de paralelismo na experiência dos utilizadores.
+        
         \section{Esquema Ilustrativo}
         \section{Protocolo de Comunicação}
             \subsection{ Comunicação Cliente-Servidor }
