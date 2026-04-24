@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
     // 1. Criar nome e ficheiro da FIFO privada
     char private_fifo[256];
-    sprintf(private_fifo, "tmp/runner_%d_fifo", getpid());
+    sprintf(private_fifo, "/tmp/runner_%d_fifo", getpid());
     if (mkfifo(private_fifo, 0666) == -1) {
         perror("Erro ao criar FIFO privado");
         return 1;
@@ -26,12 +26,16 @@ int main(int argc, char *argv[]) {
     Message msg;
     msg.runner_pid = getpid();
     
-    if (strcmp(argv[1], "-e") == 0 && argc == 4) {
+    if (strcmp(argv[1], "-e") == 0 && argc >= 4) {
         gettimeofday(&msg.start_time, NULL); // Marca o tempo de início do comando
         msg.msg_type = MSG_EXECUTE;
         msg.user_id = atoi(argv[2]);
-        msg.command_id = rand() % 1000;
-        strncpy(msg.command, argv[3], 256);
+        msg.command_id = getpid();
+        int offset = 0;
+        for (int i = 3; i < argc; i++) {
+            offset += snprintf(msg.command + offset, sizeof(msg.command) - offset,
+                                i == 3 ? "%s" : " %s", argv[i]);
+        }
         write(STDOUT_FILENO, "[runner] command submitted\n", 27);
     } 
     else if (strcmp(argv[1], "-c") == 0) {

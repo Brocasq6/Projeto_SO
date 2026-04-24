@@ -32,7 +32,7 @@ char sched_policy[64] = "FCFS";
 // Função utilitária para informar o Runner (O Semáforo Verde)
 void authorize_runner(pid_t runner_pid) {
     char private_path[64];
-    sprintf(private_path, "tmp/runner_%d_fifo", runner_pid);
+    sprintf(private_path, "/tmp/runner_%d_fifo", runner_pid);
     int fd_private = open(private_path, O_WRONLY);
     if (fd_private != -1) {
         write(fd_private, "OK", 2); // Envia o sinal sonhado!
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 
             // Responde os arrays todos concatenados na string final, para a FIFO local de quem interregou
             char private_path[64];
-            sprintf(private_path, "tmp/runner_%d_fifo", msg.runner_pid);
+            sprintf(private_path, "/tmp/runner_%d_fifo", msg.runner_pid);
             int fd_private = open(private_path, O_WRONLY);
             if (fd_private != -1) {
                 write(fd_private, out_buf, strlen(out_buf));
