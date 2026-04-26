@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
@@ -181,28 +182,34 @@ int main(int argc, char *argv[]) {
         // CADEIA DE DECISÃO 3: Pedido de consulta de estado ("-c")
         else if (msg.msg_type == MSG_STATUS) {
             pid_t status_pid = fork();
-            if (status_pid == 0){
+            if (status_pid == 0) {
                 char out_buf[4096] = {0};
                 char temp[256];
 
-                strcat(out_buf, "---\nExecuting:\n");
-                for(int i =0; i<exec_count; i++){
+                // Formato exacto do enunciado: --Executing / --Scheduled
+                strcat(out_buf, "--Executing\n");
+                for (int i = 0; i < exec_count; i++) {
                     sprintf(temp, "user-id %d - command-id %d\n", executing[i].user_id, executing[i].command_id);
-                    strcat(out_buf,temp);
+                    strcat(out_buf, temp);
                 }
-                strcat(out_buf, "---\nScheduled:\n");
-                for(int i = 0; i<sched_count; i++){
+                strcat(out_buf, "--Scheduled\n");
+                for (int i = 0; i < sched_count; i++) {
                     sprintf(temp, "user-id %d - command-id %d\n", scheduled[i].user_id, scheduled[i].command_id);
-                    strcat(out_buf,temp);
+                    strcat(out_buf, temp);
                 }
+
                 char private_path[64];
-                sprintf(private_path, "/temp/runner_%d_fifo", msg.runner_pid);
-                int fd_private =  open(private_path, O_WRONLY);
-                if(fd_private != -1){
+                sprintf(private_path, "/tmp/runner_%d_fifo", msg.runner_pid);
+                int fd_private = open(private_path, O_WRONLY);
+                if (fd_private != -1) {
                     write(fd_private, out_buf, strlen(out_buf));
                     close(fd_private);
                 }
                 exit(0);
+            }
+            // Evitar processos zombie — recolher o filho sem bloquear o loop
+            if (status_pid > 0) {
+                waitpid(status_pid, NULL, WNOHANG);
             }
         }
     }

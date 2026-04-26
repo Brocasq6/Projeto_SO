@@ -1,0 +1,9 @@
+# Ficheiros compilados
+bin/
+obj/
+
+# Logs gerados em runtime
+controller.log
+
+# FIFOs temporárias
+tmp/

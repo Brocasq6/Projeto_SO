@@ -1,0 +1,24 @@
+==============================================================
+  RESULTADOS DOS TESTES DE ESCALONAMENTO — Projeto SO
+  seg 27 abr 2026 00:12:32 WEST
+==============================================================
+
+  Cenário     | Polít. | Par.  | Tempo Total        | Turnaround Médio          | Espera User2        
+  -------------|--------|-------|--------------------|-----------------------------|---------------------
+  FAIRNESS     | FCFS   | 1     | Total:  9026 ms | Turnaround médio: 5762 ms | Espera user2: 5762 ms
+  FAIRNESS     | FCFS   | 2     | Total:  5019 ms | Turnaround médio: 3357 ms | Espera user2: 3357 ms
+  FAIRNESS     | FCFS   | 4     | Total:  3018 ms | Turnaround médio: 2158 ms | Espera user2: 2158 ms
+  FAIRNESS     | RR     | 1     | Total:  9036 ms | Turnaround médio: 5368 ms | Espera user2: 5368 ms
+  FAIRNESS     | RR     | 2     | Total:  5021 ms | Turnaround médio: 3159 ms | Espera user2: 3159 ms
+  FAIRNESS     | RR     | 4     | Total:  3015 ms | Turnaround médio: 2157 ms | Espera user2: 2157 ms
+  THROUGHPUT   | FCFS   | 1     | Total: 10031 ms | Turnaround médio: 6515 ms | Espera user2: 6515 ms
+  THROUGHPUT   | FCFS   | 2     | Total:  5027 ms | Turnaround médio: 3512 ms | Espera user2: 3512 ms
+  THROUGHPUT   | FCFS   | 4     | Total:  3018 ms | Turnaround médio: 2008 ms | Espera user2: 2008 ms
+  THROUGHPUT   | RR     | 1     | Total: 10042 ms | Turnaround médio: 6353 ms | Espera user2: 6353 ms
+  THROUGHPUT   | RR     | 2     | Total:  5021 ms | Turnaround médio: 3510 ms | Espera user2: 3510 ms
+  THROUGHPUT   | RR     | 4     | Total:  3019 ms | Turnaround médio: 2009 ms | Espera user2: 2009 ms
+
+==============================================================
+  Testes concluídos. Logs detalhados em: ./tests/results/
+  Ficheiros timing_*.log têm turnaround por job individual.
+==============================================================
