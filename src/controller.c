@@ -28,6 +28,7 @@ int exec_count = 0;
 int sched_count = 0;
 int parallel_limit = 1; // Por defeito, 1 tarefa de cada vez
 char sched_policy[64] = "FCFS";
+int last_user_id = -1;
 
 // Função utilitária para informar o Runner (O Semáforo Verde)
 void authorize_runner(pid_t runner_pid) {
@@ -149,18 +150,31 @@ int main(int argc, char *argv[]) {
 
             // Promover o próximo da fila de espera (FCFS)
             if (sched_count > 0 && exec_count < parallel_limit) {
-                Job next_job = scheduled[0];
+                int chosen = 0; // default FCFS
 
-                // Shift para a esquerda na fila scheduled
-                for (int i = 0; i < sched_count - 1; i++) {
-                    scheduled[i] = scheduled[i+1];
+                if (strcmp(sched_policy, "RR") == 0) {
+                    // Round Robin — procura utilizador diferente do último
+                    for (int i = 0; i < sched_count; i++) {
+                        if (scheduled[i].user_id != last_user_id) {
+                            chosen = i;
+                            break;
+                        }
+                    }
                 }
-                sched_count--;
 
-                executing[exec_count] = next_job;
-                exec_count++;
+                Job next_job = scheduled[chosen];
+                last_user_id = next_job.user_id;
 
-                authorize_runner(next_job.runner_pid);
+                // shift a partir da posição chosen
+                for (int i = chosen; i < sched_count - 1; i++) {
+                    scheduled[i] = scheduled[i+1];
+            }
+            sched_count--;
+
+            executing[exec_count] = next_job;
+            exec_count++;
+
+            authorize_runner(next_job.runner_pid);
             }
         }
 
