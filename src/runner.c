@@ -173,6 +173,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // Abrir o FIFO privado em O_RDWR ANTES de avisar o controller.
+    // Assim, quando o controller chamar open(O_WRONLY) em authorize_runner,
+    // já existe um leitor — o open não bloqueia e elimina a race condition.
+    int fd_private = open(private_fifo, O_RDWR);
+    if (fd_private == -1) {
+        perror("Erro ao abrir FIFO privado (RDWR)");
+        unlink(private_fifo);
+        return 1;
+    }
+
     Message msg;
     msg.runner_pid = getpid();
 
@@ -183,8 +193,7 @@ int main(int argc, char *argv[]) {
         msg.command_id = getpid();
         int offset = 0;
         for (int i = 3; i < argc; i++) {
-            offset += snprintf(msg.command + offset, sizeof(msg.command) - offset,
-                               i == 3 ? "%s" : " %s", argv[i]);
+            offset += snprintf(msg.command + offset, sizeof(msg.command) - offset, i == 3 ? "%s" : " %s", argv[i]);
         }
         write(STDOUT_FILENO, "[runner] command submitted\n", 27);
     }
@@ -196,6 +205,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         fprintf(stderr, "Erro nos argumentos.\n");
+        close(fd_private);
         unlink(private_fifo);
         return 1;
     }
@@ -203,18 +213,12 @@ int main(int argc, char *argv[]) {
     int fd_server = open(SERVER_FIFO, O_WRONLY);
     if (fd_server == -1) {
         perror("Controller não encontrado");
+        close(fd_private);
         unlink(private_fifo);
         return 1;
     }
     write(fd_server, &msg, sizeof(Message));
     close(fd_server);
-
-    int fd_private = open(private_fifo, O_RDONLY);
-    if (fd_private == -1) {
-        perror("Erro ao abrir FIFO privado para leitura");
-        unlink(private_fifo);
-        return 1;
-    }
 
     if (msg.msg_type == MSG_EXECUTE) {
         char buffer[10];

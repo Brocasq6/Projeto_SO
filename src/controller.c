@@ -51,7 +51,8 @@ int main(int argc, char *argv[]) {
         parallel_limit = atoi(argv[1]);
     }
     if (argc >= 3) {
-        strncpy(sched_policy, argv[2], 64);
+        strncpy(sched_policy, argv[2], sizeof(sched_policy) - 1);
+        sched_policy[sizeof(sched_policy) - 1] = '\0';
     }
 
     // 1. Criar a FIFO pública
@@ -91,7 +92,8 @@ int main(int argc, char *argv[]) {
                 executing[exec_count].runner_pid = msg.runner_pid;
                 executing[exec_count].user_id = msg.user_id;
                 executing[exec_count].command_id = msg.command_id;
-                strncpy(executing[exec_count].command, msg.command, 256);
+                strncpy(executing[exec_count].command, msg.command, sizeof(executing[exec_count].command) - 1);
+                executing[exec_count].command[sizeof(executing[exec_count].command) - 1] = '\0';
                 executing[exec_count].start_time = msg.start_time;
                 exec_count++;
 
@@ -102,7 +104,8 @@ int main(int argc, char *argv[]) {
                 scheduled[sched_count].runner_pid = msg.runner_pid;
                 scheduled[sched_count].user_id = msg.user_id;
                 scheduled[sched_count].command_id = msg.command_id;
-                strncpy(scheduled[sched_count].command, msg.command, 256);
+                strncpy(scheduled[sched_count].command, msg.command, sizeof(scheduled[sched_count].command) - 1);
+                scheduled[sched_count].command[sizeof(scheduled[sched_count].command) - 1] = '\0';
                 scheduled[sched_count].start_time = msg.start_time;
                 sched_count++;
             }
