@@ -169,13 +169,13 @@ int main(int argc, char *argv[]) {
                 // shift a partir da posição chosen
                 for (int i = chosen; i < sched_count - 1; i++) {
                     scheduled[i] = scheduled[i+1];
-            }
-            sched_count--;
+                }
+                sched_count--;
 
-            executing[exec_count] = next_job;
-            exec_count++;
+                executing[exec_count] = next_job;
+                exec_count++;
 
-            authorize_runner(next_job.runner_pid);
+                authorize_runner(next_job.runner_pid);
             }
         }
 
@@ -205,12 +205,29 @@ int main(int argc, char *argv[]) {
                     write(fd_private, out_buf, strlen(out_buf));
                     close(fd_private);
                 }
+
+                // Avisar o controller (pai) que já terminou, para que faça waitpid.
+                // Reutilizamos o campo runner_pid para indicar o PID do filho.
+                Message ack;
+                ack.msg_type = MSG_STATUS_DONE;
+                ack.runner_pid = getpid();
+
+                int fd_pub = open(SERVER_FIFO, O_WRONLY);
+                if (fd_pub != -1) {
+                    write(fd_pub, &ack, sizeof(Message));
+                    close(fd_pub);
+                }
                 exit(0);
             }
-            // Evitar processos zombie — recolher o filho sem bloquear o loop
-            if (status_pid > 0) {
-                waitpid(status_pid, NULL, WNOHANG);
-            }
+            // (Já não chamamos waitpid aqui — o filho avisa-nos via FIFO público
+            //  com MSG_STATUS_DONE, e aí o loop principal recolhe-o.)
+        }
+
+        // CADEIA DE DECISÃO 4: Filho do -c terminou — recolher zombie
+        else if (msg.msg_type == MSG_STATUS_DONE) {
+            // O filho já enviou esta mensagem antes de exit(), portanto
+            // o zombie já existe e o waitpid não bloqueia.
+            waitpid(msg.runner_pid, NULL, 0);
         }
     }
 
