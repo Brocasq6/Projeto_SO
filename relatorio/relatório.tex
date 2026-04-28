@@ -48,6 +48,9 @@
                 {\normalsize{Data de Entrega: 10 de Maio de 2026}}
         \end{center}
 
+        \newpage
+
+
         \section{Introdução}
         No contexto da unidade curricular de Sistemas Operativos, foi proposto o desenvolvimento de um ambiente
         de orquestração de execução de comandos, com o objetivo de aplicar conhecimentos sobre processos, comunicação
@@ -69,10 +72,59 @@
         do impacto das políticas de escalonamento e das configurações de paralelismo na experiência dos utilizadores.
         
         \section{Esquema Ilustrativo}
+
         \section{Protocolo de Comunicação}
-            \subsection{ Comunicação Cliente-Servidor }
-            \subsection{Comunicação pai-filho }
-            \subsection{Vantagens desta abordagem}
+
+        O sistema segue um modelo \textit{cliente-servidor} baseado em \textit{pipes} com nome (FIFOs). O \texttt{controller} é o servidor — único e persistente — e cada \texttt{runner} é um cliente efémero que envia um pedido, aguarda a resposta e termina. A escolha de FIFOs justifica-se pela simplicidade, pela persistência no sistema de ficheiros e por terem sido o mecanismo abordado em aula.
+
+        \subsection{Topologia das FIFOs}
+
+        O protocolo usa duas categorias de FIFO:
+
+        \begin{itemize}
+        \item \textbf{FIFO público} (\texttt{/tmp/controller\_fifo}): criado pelo \texttt{controller} no arranque, é o ponto de entrada único do sistema. Todos os runners escrevem aqui, e o servidor lê continuamente. É aberto em \texttt{O\_RDWR} para evitar que o descritor feche quando não há nenhum runner ligado.
+
+        \item \textbf{FIFO privado por runner} (\texttt{/tmp/runner\_<pid>\_fifo}): criado pelo próprio runner, com base no seu PID. Serve para o servidor responder àquele runner em particular, evitando que respostas se cruzem entre clientes.
+        \end{itemize}
+
+        \subsection{Estrutura \texttt{Message}}
+
+        Toda a comunicação assenta numa \texttt{struct} de tamanho fixo definida em \texttt{protocol.h}, com os campos: \texttt{runner\_pid}, \texttt{user\_id}, \texttt{command\_id}, \texttt{command[256]}, \texttt{msg\_type} e \texttt{start\_time}. O tamanho fixo permite que cada \texttt{read()} devolva exactamente uma mensagem, sem delimitadores nem parsing. Como \texttt{sizeof(Message)} é muito inferior a \texttt{PIPE\_BUF} (4096 bytes em Linux), o POSIX garante que cada \texttt{write()} é atómico — mensagens de runners diferentes nunca se entrelaçam no FIFO público.
+
+        \subsection{Tipos de mensagem}
+
+        O campo \texttt{msg\_type} distingue cinco operações:
+
+        \begin{itemize}
+        \item \texttt{MSG\_EXECUTE} — submissão de um comando (\texttt{-e}).
+        \item \texttt{MSG\_DONE} — runner notifica o fim da execução.
+        \item \texttt{MSG\_STATUS} — pedido do estado das filas (\texttt{-c}).
+        \item \texttt{MSG\_SHUTDOWN} — pedido de encerramento (\texttt{-s}).
+        \item \texttt{MSG\_STATUS\_DONE} — mensagem interna do servidor para recolha de zombies (ver \ref{sec:filhos-c}).
+        \end{itemize}
+
+        \subsection{Fluxos de comunicação}
+
+        \paragraph{Submissão (\texttt{-e}).} O runner cria o seu FIFO privado e abre-o em \texttt{O\_RDWR} \textit{antes} de contactar o servidor. Esta abertura prévia elimina uma \textit{race condition}: quando o controller mais tarde chamar \texttt{open(O\_WRONLY)} para responder, já há um leitor registado. O runner escreve então a \texttt{Message} no FIFO público; o controller autoriza imediatamente (\texttt{"OK"} no FIFO privado) ou enfileira o pedido. Após executar o comando — incluindo \textit{pipelines} e redirecionamentos — o runner envia \texttt{MSG\_DONE}, e o controller regista a duração no \texttt{controller.log} e promove o próximo da fila.
+
+        \paragraph{Consulta (\texttt{-c}).} O controller faz \texttt{fork()} para o filho compor a resposta sem bloquear o loop principal. O filho escreve as listas \texttt{-{}-Executing} e \texttt{-{}-Scheduled} no FIFO privado do runner e termina (ver \ref{sec:filhos-c}).
+
+        \paragraph{Encerramento (\texttt{-s}).} O controller marca \texttt{shutdown\_requested} e deixa de aceitar novos \texttt{MSG\_EXECUTE}, mas continua a tratar os jobs em curso. Quando a fila de execução fica vazia, faz \texttt{unlink()} ao FIFO público e confirma ao runner que pediu o shutdown.
+
+        \subsection{Recolha dos filhos do \texttt{-c}}
+        \label{sec:filhos-c}
+
+        Cada \texttt{fork()} para tratar um \texttt{-c} cria um processo que, ao chamar \texttt{exit()}, fica em estado \textit{zombie} até ser recolhido. Em vez de \texttt{signal(SIGCHLD, SIG\_IGN)} — fora do âmbito da disciplina — desenhámos um protocolo interno: antes de \texttt{exit()}, o filho envia \texttt{MSG\_STATUS\_DONE} ao pai pelo FIFO público com o seu PID. O loop principal, ao receber a mensagem, chama \texttt{waitpid()} com esse PID. Como o filho já fez \texttt{exit} antes da mensagem ser lida, o zombie já existe e o \texttt{waitpid} recolhe-o sem bloquear.
+
+        \subsection{Vantagens da abordagem}
+
+        \begin{itemize}
+        \item \textbf{Concorrência controlada} pelo limite \texttt{parallel-tasks}, sem deixar de aceitar novos pedidos.
+        \item \textbf{Isolamento entre clientes} via FIFO privado nomeado pelo PID.
+        \item \textbf{Mensagens atómicas} graças ao tamanho fixo abaixo de \texttt{PIPE\_BUF}.
+        \item \textbf{Recolha de zombies sem \texttt{signal}}, usando apenas FIFOs e \texttt{waitpid}.
+        \item \textbf{Robustez a \textit{race conditions}} pela abertura prévia em \texttt{O\_RDWR} dos FIFOs.
+        \end{itemize}
         \section{Decisões}
         \section{Implementações/Funcionalidades}
             \subsection{Operações do cliente}

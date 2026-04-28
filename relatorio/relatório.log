@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.3.1)  22 APR 2026 10:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.3.1)  28 APR 2026 10:33
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -238,35 +238,52 @@ File: ../Imagens/UM.png Graphic file (type png)
 <use ../Imagens/UM.png>
 Package pdftex.def Info: ../Imagens/UM.png  used on input line 26.
 (pdftex.def)             Requested size: 173.56177pt x 173.56519pt.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 51.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 51.
 
 
 [1{/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}
 
  <../Imagens/UM.png>]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 54.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 54.
 
-[2] (./relat贸rio.aux)
+Overfull \hbox (4.6129pt too wide) in paragraph at lines 87--88
+[]\T1/cmr/bx/n/10 FIFO pri-vado por run-ner \T1/cmr/m/n/10 (\T1/cmtt/m/n/10 /tmp/runner_<pid>_fifo\T1/cmr/m/n/10 ): cri-ado pelo pr髉rio
+ []
+
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 90.
+
+Overfull \hbox (13.56616pt too wide) in paragraph at lines 92--93
+\T1/cmr/m/n/10 Toda a co-mu-ni-ca玢o as-senta numa \T1/cmtt/m/n/10 struct \T1/cmr/m/n/10 de tamanho fixo definida em \T1/cmtt/m/n/10 protocol.h\T1/cmr/m/n/10 ,
+ []
+
+
+
+[2]
+
+[3]
+
+[4] (./relat贸rio.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 2577 strings out of 473190
- 40692 string characters out of 5715801
- 437819 words of memory out of 5000000
- 25824 multiletter control sequences out of 15000+600000
- 562681 words of font info for 41 fonts, out of 8000000 for 9000
+ 2590 strings out of 473190
+ 40878 string characters out of 5715801
+ 440849 words of memory out of 5000000
+ 25833 multiletter control sequences out of 15000+600000
+ 564696 words of font info for 45 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 59i,6n,67p,282b,182s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on relat贸rio.pdf (2 pages, 103080 bytes).
+ 59i,6n,67p,781b,233s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbi1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfit1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
+Output written on relat贸rio.pdf (4 pages, 213068 bytes).
 PDF statistics:
- 34 PDF objects out of 1000 (max. 8388607)
- 19 compressed objects within 1 object stream
+ 60 PDF objects out of 1000 (max. 8388607)
+ 35 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
