@@ -1,24 +1,27 @@
-==============================================================
+==================================================================================
   RESULTADOS DOS TESTES DE ESCALONAMENTO — Projeto SO
-  seg 27 abr 2026 12:32:56 WEST
-==============================================================
+  sáb 02 mai 2026 00:00:00 WEST
+==================================================================================
 
-  Cenário     | Polít. | Par.  | Tempo Total        | Turnaround Médio          | Espera User2        
-  -------------|--------|-------|--------------------|-----------------------------|---------------------
-  FAIRNESS     | FCFS   | 1     | Total:  9315 ms | Turnaround médio: 6033 ms | Espera user2: 6033 ms
-  FAIRNESS     | FCFS   | 2     | Total:  5047 ms | Turnaround médio: 3371 ms | Espera user2: 3371 ms
-  FAIRNESS     | FCFS   | 4     | Total:  3044 ms | Turnaround médio: 2171 ms | Espera user2: 2171 ms
-  FAIRNESS     | RR     | 1     | Total:  9073 ms | Turnaround médio: 5386 ms | Espera user2: 5386 ms
-  FAIRNESS     | RR     | 2     | Total:  5052 ms | Turnaround médio: 3176 ms | Espera user2: 3176 ms
-  FAIRNESS     | RR     | 4     | Total:  3040 ms | Turnaround médio: 2171 ms | Espera user2: 2171 ms
-  THROUGHPUT   | FCFS   | 1     | Total: 10077 ms | Turnaround médio: 6044 ms | Espera user2: 6044 ms
-  THROUGHPUT   | FCFS   | 2     | Total:  5051 ms | Turnaround médio: 3696 ms | Espera user2: 3696 ms
-  THROUGHPUT   | FCFS   | 4     | Total:  3037 ms | Turnaround médio: 2022 ms | Espera user2: 2022 ms
-  THROUGHPUT   | RR     | 1     | Total: 10071 ms | Turnaround médio: 6705 ms | Espera user2: 6705 ms
-  THROUGHPUT   | RR     | 2     | Total:  5052 ms | Turnaround médio: 3527 ms | Espera user2: 3527 ms
-  THROUGHPUT   | RR     | 4     | Total:  3036 ms | Turnaround médio: 2021 ms | Espera user2: 2021 ms
+  Cenário     | Polít. | Par | Tempo Total | Turnaround Md | Espera User2 
+  -------------+--------+-----+-------------+---------------+---------------
+  FAIRNESS     | FCFS   | 1   |     9027 ms |       5647 ms |       8506 ms
+  FAIRNESS     | FCFS   | 2   |     5021 ms |       3264 ms |       4497 ms
+  FAIRNESS     | FCFS   | 4   |     3019 ms |       2104 ms |       2494 ms
+  FAIRNESS     | RR     | 1   |     9033 ms |       5251 ms |       4502 ms
+  FAIRNESS     | RR     | 2   |     5074 ms |       3075 ms |       2547 ms
+  FAIRNESS     | RR     | 4   |     3024 ms |       2106 ms |       2500 ms
+  THROUGHPUT   | FCFS   | 1   |    10033 ms |       6382 ms |        —
+  THROUGHPUT   | FCFS   | 2   |     5074 ms |       3406 ms |        —
+  THROUGHPUT   | FCFS   | 4   |     3071 ms |       1964 ms |        —
+  THROUGHPUT   | RR     | 1   |    10030 ms |       6383 ms |        —
+  THROUGHPUT   | RR     | 2   |     5069 ms |       3405 ms |        —
+  THROUGHPUT   | RR     | 4   |     3071 ms |       1964 ms |        —
 
-==============================================================
+==================================================================================
   Testes concluídos. Logs detalhados em: ./tests/results/
-  Ficheiros timing_*.log têm turnaround por job individual.
-==============================================================
+  - timing_*.log     : turnaround por job individual
+  - runner_*.log     : output dos runners
+  - controller_*.log : log do controller (durations registadas)
+  Para a tabela formatada por cenário, corre: ./tests/generate_table.sh
+==================================================================================

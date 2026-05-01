@@ -23,7 +23,7 @@
 \begin{document}
 
         \begin{center}
-                \includegraphics[width=0.5\textwidth]{../Imagens/UM.png}\\
+                \includegraphics[width=0.5\textwidth]{../imagens/UM.png}\\
                 \vspace{0.1cm}
                 {\large \textbf{Unidade Curricular de Sistemas Operativos 2025/2026}}
         \end{center}
@@ -125,14 +125,44 @@
         \item \textbf{Recolha de zombies sem \texttt{signal}}, usando apenas FIFOs e \texttt{waitpid}.
         \item \textbf{Robustez a \textit{race conditions}} pela abertura prévia em \texttt{O\_RDWR} dos FIFOs.
         \end{itemize}
-        \section{Decisões}
-        \section{Implementações/Funcionalidades}
-            \subsection{Operações do cliente}
-            \subsection{Gestão do Servidor}
-            \subsection{Cache em memória}
+        \section{Decisões de Implementação}
+
+        Durante o desenvolvimento do projeto, foram tomadas várias decisões arquiteturais para garantir a simplicidade, robustez e eficiência do sistema:
+
+        \begin{itemize}
+            \item \textbf{Alocação estática das filas de espera e execução:} Optou-se por utilizar \textit{arrays} estáticos (\texttt{executing[MAX\_JOBS]} e \texttt{scheduled[MAX\_JOBS]}) com um limite máximo generoso (1024), em detrimento de estruturas de dados dinâmicas, como listas ligadas. Esta abordagem simplifica a gestão de memória (eliminando chamadas a \texttt{malloc} e \texttt{free}) e anula a probabilidade de \textit{memory leaks} e falhas de segmentação na gestão de múltiplos pedidos simultâneos.
+            
+            \item \textbf{Identificador único do comando (\texttt{command\_id}):} O identificador único de comando, exigido pelo enunciado, é gerado pelo \texttt{runner} com base no seu próprio PID (\texttt{getpid()}). Como o sistema operativo garante a unicidade do PID de processos em execução, evitou-se a necessidade de sincronização complexa entre múltiplos clientes para atribuição de IDs.
+            
+            \item \textbf{Prevenção de \textit{busy waiting} no servidor:} O \texttt{controller} abre o FIFO público com a flag \texttt{O\_RDWR} (leitura e escrita), em vez de apenas \texttt{O\_RDONLY}. Caso fosse aberto apenas para leitura, o \texttt{read()} retornaria EOF (0) sempre que o último \texttt{runner} terminasse, resultando num ciclo infinito de consumo de CPU. Ao manter uma extremidade de escrita aberta, a chamada bloqueia eficientemente até à chegada de um novo cliente.
+            
+            \item \textbf{Política Round-Robin baseada no Utilizador:} A política alternativa de escalonamento foi desenhada para garantir a justiça no \textit{throughput}. Ao selecionar o próximo processo da fila, o escalonador procura iterativamente o primeiro comando pertencente a um utilizador diferente daquele que foi escalonado na iteração anterior. Se a fila contiver apenas comandos de um único utilizador, a política degenera suavemente para FCFS, garantindo a ausência de inanição (\textit{starvation}).
+        \end{itemize}
+        \section{Implementações e Funcionalidades}
+        
+        \subsection{Operações do Cliente (\texttt{runner})}
+        O programa \texttt{runner} é o ponto de interação com o utilizador e suporta três modos de operação estipulados: execução (\texttt{-e}), consulta (\texttt{-c}) e encerramento (\texttt{-s}). 
+        
+        No modo de execução, o principal desafio tecnológico reside no processamento de comandos complexos. A função \texttt{parse\_command()} divide a \textit{string} de entrada (fornecida pelo utilizador) em \textit{tokens}, agrupa esses \textit{tokens} em segmentos separados pelo operador de \textit{pipe} (\texttt{|}), e deteta operadores de redirecionamento (\texttt{>}, \texttt{2>}, \texttt{<}), preparando matrizes de estruturas \texttt{Segment}.
+
+        Para a execução (\texttt{exec\_pipeline()}), se o comando possuir $N$ segmentos, o cliente cria $N-1$ \textit{pipes} anónimos. Em seguida, invoca \texttt{fork()} $N$ vezes. Cada processo filho utiliza \texttt{dup2()} para:
+        \begin{itemize}
+            \item Ligar o \texttt{STDOUT} ao extremo de escrita do seu \textit{pipe} e o \texttt{STDIN} ao extremo de leitura do \textit{pipe} anterior.
+            \item Sobrepor os descritores adequados caso o utilizador tenha especificado ficheiros de redirecionamento, os quais têm precedência sobre as ligações dos \textit{pipes}.
+        \end{itemize}
+        Por fim, cada filho executa \texttt{execvp()}. O processo pai aguarda (\texttt{wait()}) que todos os componentes da \textit{pipeline} terminem antes de notificar o servidor do sucesso da operação com a mensagem \texttt{MSG\_DONE}.
+
+        \subsection{Gestão do Servidor (\texttt{controller})}
+        O \texttt{controller} centraliza o orquestramento, garantindo que o número de processos a executar em simultâneo nunca ultrapassa o limite \texttt{parallel-tasks}. 
+        
+        O estado é mantido em duas filas: execução (\texttt{executing}) e espera (\texttt{scheduled}). O fluxo de gestão funciona por eventos:
+        \begin{itemize}
+            \item \textbf{Submissão:} Num pedido \texttt{MSG\_EXECUTE}, se o limite de concorrência não tiver sido atingido, o servidor autoriza a execução via FIFO privado e insere o comando na fila \texttt{executing}. Se o sistema estiver lotado, insere o comando na fila \texttt{scheduled}.
+            \item \textbf{Término e Registo:} Ao receber um \texttt{MSG\_DONE}, o servidor calcula o tempo total de resposta (usando \texttt{gettimeofday()}) e regista-o persistentemente no ficheiro \texttt{controller.log}, juntamente com o \texttt{user\_id} e o \texttt{command\_id}. Depois de limpar a vaga na fila de execução, aplica a política de escalonamento escolhida (FCFS ou RR) para promover o próximo comando da fila \texttt{scheduled}, reativando o ciclo.
+        \end{itemize}
         \section{Testes e Resultados}
-                \subsection{BenchmarkConsultar }
-                \subsection{BenchmarkProcurar}
+                \subsection{Análise das Políticas de Escalonamento (FCFS vs RR)}
+                \subsection{Impacto do Paralelismo}
         \section{Conclusão}
 
 \end{document}

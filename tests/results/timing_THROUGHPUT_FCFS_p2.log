@@ -1,6 +1,6 @@
-user3 turnaround=2022ms
-user1 turnaround=3022ms
-user1 turnaround=3027ms
-user2 turnaround=4034ms
-user2 turnaround=5036ms
-user3 turnaround=5038ms
+user2 turnaround=1007ms
+user1 turnaround=3011ms
+user3 turnaround=2957ms
+user1 turnaround=3855ms
+user3 turnaround=4752ms
+user2 turnaround=4854ms

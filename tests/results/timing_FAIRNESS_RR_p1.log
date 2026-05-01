@@ -1,5 +1,5 @@
-user1_job2 turnaround=2016ms
-user1_job1 turnaround=4028ms
-user2_job1 turnaround=4775ms
-user1_job3 turnaround=7051ms
-user1_job4 turnaround=9062ms
+user1_job1 turnaround=2007ms
+user1_job2 turnaround=3962ms
+user2_job1 turnaround=4502ms
+user1_job3 turnaround=6916ms
+user1_job4 turnaround=8866ms
