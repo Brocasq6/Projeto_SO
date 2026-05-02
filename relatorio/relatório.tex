@@ -131,15 +131,12 @@
 
         \begin{itemize}
                 \item \textbf{Alocação estática das filas de espera e execução:} Optou-se por utilizar \textit{arrays} estáticos (\texttt{executing[MAX\_JOBS]} e \texttt{scheduled[MAX\_JOBS]}) com um limite máximo generoso (1024), em detrimento de estruturas de dados dinâmicas, como listas ligadas. Esta abordagem simplifica a gestão de memória (eliminando chamadas a \texttt{malloc} e \texttt{free}) e anula a probabilidade de \textit{memory leaks} e falhas de segmentação na gestão de múltiplos pedidos simultâneos.
-            
                 \item \textbf{Identificador único do comando (\texttt{command\_id}):} O identificador único de comando, exigido pelo enunciado, é gerado pelo \texttt{runner} com base no seu próprio PID (\texttt{getpid()}). Como o sistema operativo garante a unicidade do PID de processos em execução, evitou-se a necessidade de sincronização complexa entre múltiplos clientes para atribuição de IDs.
-            
                 \item \textbf{Prevenção de \textit{busy waiting} no servidor:} O \texttt{controller} abre o FIFO público com a flag \texttt{O\_RDWR} (leitura e escrita), em vez de apenas \texttt{O\_RDONLY}. Caso fosse aberto apenas para leitura, o \texttt{read()} retornaria EOF (0) sempre que o último \texttt{runner} terminasse, resultando num ciclo infinito de consumo de CPU. Ao manter uma extremidade de escrita aberta, a chamada bloqueia eficientemente até à chegada de um novo cliente.
-            
                 \item \textbf{Política Round-Robin baseada no Utilizador:} A política alternativa de escalonamento foi desenhada para garantir a justiça no \textit{throughput}. Ao selecionar o próximo processo da fila, o escalonador procura iterativamente o primeiro comando pertencente a um utilizador diferente daquele que foi escalonado na iteração anterior. Se a fila contiver apenas comandos de um único utilizador, a política degenera suavemente para FCFS, garantindo a ausência de inanição (\textit{starvation}).
         \end{itemize}
+
         \section{Implementações e Funcionalidades}
-        
         \subsection{Operações do Cliente (\texttt{runner})}
         O programa \texttt{runner} é o ponto de interação com o utilizador e suporta três modos de operação estipulados: execução (\texttt{-e}), consulta (\texttt{-c}) e encerramento (\texttt{-s}). 
         
@@ -180,5 +177,23 @@
                 de 50--70 ms atribuível à latência de comunicação via FIFO.
 
         \section{Conclusão}
+
+                O sistema desenvolvido cumpre os objetivos propostos: o \texttt{controller} orquestra
+                múltiplos \texttt{runners} via pipes com nome, garantindo escalonamento justo, registo 
+                persistente de execuções e suporte a paralelismo configurável. O \texttt{runner} suporta 
+                a execução de pipelines e redirecionamentos arbitrários, comunicando com o controller de 
+                forma assíncrona e sem condições de corrida.
+
+                A avaliação experimental demonstrou que o paralelismo é o fator com maior impacto no 
+                desempenho global, reduzindo o tempo total em cerca de 69\% ao passar de $p=1$ para $p=4$. 
+                A política de escalonamento mostrou-se relevante sobretudo em cenários de baixo paralelismo 
+                com utilizadores dominantes: o RR reduziu o turnaround do utilizador minoritário em cerca de 47\% 
+                face ao FCFS, ao promovê-lo antecipadamente na fila. Em cenários com carga equilibrada entre utilizadores, 
+                as duas políticas convergem para resultados equivalentes.
+
+                Como trabalho futuro, seria interessante explorar políticas mais sofisticadas, 
+                como escalonamento por prioridade dinâmica ou por quota de CPU por utilizador, 
+                bem como avaliar o comportamento do sistema sob cargas mais elevadas e com comandos 
+                de duração heterogénea mais acentuada.
 
 \end{document}
