@@ -3,23 +3,14 @@
 % Version 2.21 of 2022/01/12
 %
 \documentclass[runningheads]{llncs}
-%
-\usepackage{graphicx}
 \usepackage[T1]{fontenc}
-% T1 fonts will be used to generate the final print and online PDFs,
-% so please use T1 fonts in your manuscript whenever possible.
-% Other font encondings may result in incorrect characters.
-%
 \usepackage{graphicx}
-% Used for displaying a sample figure. If possible, figure files should
-% be included in EPS format.
-%
-% If you use the hyperref package, please uncomment the following two lines
-% to display URLs in blue roman font according to Springer's eBook style:
-%\usepackage{color}
-%\renewcommand\UrlFont{\color{blue}\rmfamily}
-%\urlstyle{rm}
-%
+\usepackage{tocloft}
+\usepackage{float}
+\usepackage{hyperref}
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
 \begin{document}
 
         \begin{center}
@@ -49,7 +40,17 @@
         \end{center}
 
         \newpage
+        \renewcommand{\contentsname}{\'Indice}
+        \tableofcontents
+        \thispagestyle{plain}
 
+        \newpage
+        \renewcommand{\listfigurename}{\'Indice de Figuras}
+        \listoffigures
+        \thispagestyle{plain}
+
+        \newpage
+        \pagenumbering{arabic}
 
         \section{Introdução}
         No contexto da unidade curricular de Sistemas Operativos, foi proposto o desenvolvimento de um ambiente
@@ -71,7 +72,29 @@
         os mecanismos de comunicação utilizados e os testes realizados, incluindo uma análise comparativa 
         do impacto das políticas de escalonamento e das configurações de paralelismo na experiência dos utilizadores.
         
+        \newpage
+        
         \section{Esquema Ilustrativo}
+
+        O esquema ilustrativo apresentado representa a arquitetura geral do sistema 
+        desenvolvido. No centro encontra-se o \texttt{controller}, o componente servidor
+        que gere todas as comunicações e o escalonamento dos comandos. 
+        Cada \texttt{runner} (cliente) comunica com o \texttt{controller} através de dois 
+        canais distintos: um FIFO público partilhado por todos os runners, utilizado para 
+        o envio de pedidos, e um FIFO privado único por runner (identificado pelo seu PID), 
+        utilizado pelo \texttt{controller} para enviar respostas individuais. O fluxo de 
+        execução inicia-se com a submissão de um pedido pelo runner, seguida da autorização 
+        (ou enfileiramento) pelo controller, da execução do comando pelo runner, e por fim da
+        notificação de conclusão enviada de volta ao controller.
+
+        \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.6\textwidth]{../imagens/esquema_ilustrativo_so.png}
+                \caption{Esquema ilustrativo do projeto}
+                \label{fig:esquema}
+        \end{figure}
+
+
 
         \section{Protocolo de Comunicação}
 
@@ -125,6 +148,7 @@
         \item \textbf{Recolha de zombies sem \texttt{signal}}, usando apenas FIFOs e \texttt{waitpid}.
         \item \textbf{Robustez a \textit{race conditions}} pela abertura prévia em \texttt{O\_RDWR} dos FIFOs.
         \end{itemize}
+
         \section{Decisões de Implementação}
 
         Durante o desenvolvimento do projeto, foram tomadas várias decisões arquiteturais para garantir a simplicidade, robustez e eficiência do sistema:
@@ -135,6 +159,8 @@
                 \item \textbf{Prevenção de \textit{busy waiting} no servidor:} O \texttt{controller} abre o FIFO público com a flag \texttt{O\_RDWR} (leitura e escrita), em vez de apenas \texttt{O\_RDONLY}. Caso fosse aberto apenas para leitura, o \texttt{read()} retornaria EOF (0) sempre que o último \texttt{runner} terminasse, resultando num ciclo infinito de consumo de CPU. Ao manter uma extremidade de escrita aberta, a chamada bloqueia eficientemente até à chegada de um novo cliente.
                 \item \textbf{Política Round-Robin baseada no Utilizador:} A política alternativa de escalonamento foi desenhada para garantir a justiça no \textit{throughput}. Ao selecionar o próximo processo da fila, o escalonador procura iterativamente o primeiro comando pertencente a um utilizador diferente daquele que foi escalonado na iteração anterior. Se a fila contiver apenas comandos de um único utilizador, a política degenera suavemente para FCFS, garantindo a ausência de inanição (\textit{starvation}).
         \end{itemize}
+
+        \newpage
 
         \section{Implementações e Funcionalidades}
         \subsection{Operações do Cliente (\texttt{runner})}
@@ -157,6 +183,7 @@
                 \item \textbf{Submissão:} Num pedido \texttt{MSG\_EXECUTE}, se o limite de concorrência não tiver sido atingido, o servidor autoriza a execução via FIFO privado e insere o comando na fila \texttt{executing}. Se o sistema estiver lotado, insere o comando na fila \texttt{scheduled}.
                 \item \textbf{Término e Registo:} Ao receber um \texttt{MSG\_DONE}, o servidor calcula o tempo total de resposta (usando \texttt{gettimeofday()}) e regista-o persistentemente no ficheiro \texttt{controller.log}, juntamente com o \texttt{user\_id} e o \texttt{command\_id}. Depois de limpar a vaga na fila de execução, aplica a política de escalonamento escolhida (FCFS ou RR) para promover o próximo comando da fila \texttt{scheduled}, reativando o ciclo.
         \end{itemize}
+
         \section{Testes e Resultados}
                 \subsection{Análise das Políticas de Escalonamento (FCFS vs RR)}
 
