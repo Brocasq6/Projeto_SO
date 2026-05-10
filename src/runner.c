@@ -195,7 +195,9 @@ int main(int argc, char *argv[]) {
         for (int i = 3; i < argc; i++) {
             offset += snprintf(msg.command + offset, sizeof(msg.command) - offset, i == 3 ? "%s" : " %s", argv[i]);
         }
-        write(STDOUT_FILENO, "[runner] command submitted\n", 27);
+        char sub_msg[64];
+        int slen = sprintf(sub_msg, "[runner] command %d submitted\n", msg.command_id);
+        write(STDOUT_FILENO, sub_msg, slen);
     }
     else if (strcmp(argv[1], "-c") == 0) {
         msg.msg_type = MSG_STATUS;

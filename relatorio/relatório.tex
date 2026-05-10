@@ -6,12 +6,14 @@
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
 \usepackage{tocloft}
+\renewcommand{\tablename}{Tabela}
 \usepackage{float}
 \usepackage{hyperref}
 \setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{3}
 
 \begin{document}
+\pagestyle{plain}
 
         \begin{center}
                 \includegraphics[width=0.5\textwidth]{../imagens/UM.png}\\
@@ -38,8 +40,10 @@
         \begin{center}
                 {\normalsize{Data de Entrega: 10 de Maio de 2026}}
         \end{center}
+        \thispagestyle{empty}
 
         \newpage
+        \pagenumbering{roman}
         \renewcommand{\contentsname}{\'Indice}
         \tableofcontents
         \thispagestyle{plain}
@@ -89,7 +93,7 @@
 
         \begin{figure}[H]
                 \centering
-                \includegraphics[width=0.6\textwidth]{../imagens/esquema_ilustrativo_so.png}
+                \includegraphics[width=0.9\textwidth]{../imagens/esquema_ilustrativo_so.png}
                 \caption{Esquema ilustrativo do projeto}
                 \label{fig:esquema}
         \end{figure}
@@ -185,23 +189,70 @@
         \end{itemize}
 
         \section{Testes e Resultados}
+
+                Os testes foram executados automaticamente pelo script \texttt{tests/run\_tests.sh},
+                que lança múltiplos runners em paralelo e mede o turnaround de cada job.
+                Foram considerados dois cenários e duas políticas (FCFS e RR) com três níveis de paralelismo ($p \in \{1, 2, 4\}$).
+
                 \subsection{Análise das Políticas de Escalonamento (FCFS vs RR)}
 
-                No cenário de \textit{fairness} (utilizador 1 com 4 jobs de 2s, utilizador 2 com 1 job de 1s), 
-                com paralelismo 1, o FCFS penaliza claramente o utilizador 2, que aguardou \textbf{8506 ms} de 
-                turnaround por estar no fim da fila. O RR reduziu esse valor para \textbf{4502 ms} (~47\% de melhoria), 
-                promovendo o job do utilizador minoritário assim que uma vaga ficou disponível. Com paralelismo 4, as 
-                duas políticas convergem (~2500 ms), pois todos os jobs do utilizador 1 são admitidos em simultâneo e a 
-                distinção deixa de ser relevante. No cenário de \textit{throughput} com carga distribuída por 3 utilizadores, 
-                FCFS e RR produzem resultados praticamente idênticos, dado que a fila já tem diversidade natural de utilizadores.
+                \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|r|r|r|}
+                \hline
+                \textbf{Política} & \textbf{Par.} & \textbf{Tempo Total} & \textbf{Turnaround Méd.} & \textbf{Espera User 2} \\
+                \hline
+                FCFS & 1 & 9027 ms & 5647 ms & 8506 ms \\
+                FCFS & 2 & 5021 ms & 3264 ms & 4497 ms \\
+                FCFS & 4 & 3019 ms & 2104 ms & 2494 ms \\
+                \hline
+                RR   & 1 & 9033 ms & 5251 ms & \textbf{4502 ms} \\
+                RR   & 2 & 5074 ms & 3075 ms & \textbf{2547 ms} \\
+                RR   & 4 & 3024 ms & 2106 ms & 2500 ms \\
+                \hline
+                \end{tabular}
+                \vspace{1em}
+                \caption{Cenário FAIRNESS — user 1 com 4 jobs de 2s, user 2 com 1 job de 1s}
+                \label{tab:fairness}
+                \end{table}
+                \vspace{-1em}
+
+                Conforme se observa na Tabela~\ref{tab:fairness}, com paralelismo 1, o FCFS penaliza claramente o
+                utilizador 2, que aguardou \textbf{8506 ms} de turnaround por estar no fim da fila. O RR reduziu
+                esse valor para \textbf{4502 ms} (~47\% de melhoria), promovendo o job do utilizador minoritário
+                assim que uma vaga ficou disponível. Com paralelismo 4, as duas políticas convergem (~2500 ms),
+                pois todos os jobs do utilizador 1 são admitidos em simultâneo e a distinção deixa de ser relevante.
 
                 \subsection{Impacto do Paralelismo}
 
-                O nível de paralelismo revelou-se o fator dominante no desempenho global. No cenário de \textit{throughput}, 
-                o tempo total desceu de \textbf{10033 ms} ($p=1$) para \textbf{5074 ms} ($p=2$) e \textbf{3071 ms} ($p=4$), 
-                reduções de ~50\% e ~69\% respetivamente. O turnaround médio por job acompanha esta tendência, de 6382 ms para 
-                1964 ms entre os extremos. O comportamento aproxima-se do modelo teórico $T_{seq} / p$, com um overhead residual 
-                de 50--70 ms atribuível à latência de comunicação via FIFO.
+                \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|r|r|}
+                \hline
+                \textbf{Política} & \textbf{Par.} & \textbf{Tempo Total} & \textbf{Turnaround Méd.} \\
+                \hline
+                FCFS & 1 & 10033 ms & 6382 ms \\
+                FCFS & 2 &  5074 ms & 3406 ms \\
+                FCFS & 4 &  3071 ms & 1964 ms \\
+                \hline
+                RR   & 1 & 10030 ms & 6383 ms \\
+                RR   & 2 &  5069 ms & 3405 ms \\
+                RR   & 4 &  3071 ms & 1964 ms \\
+                \hline
+                \end{tabular}
+                \vspace{1em}
+                \caption{Cenário THROUGHPUT — 3 utilizadores com carga mista}
+                \label{tab:throughput}
+                \end{table}
+
+                Como se verifica na Tabela~\ref{tab:throughput}, o nível de paralelismo revelou-se o fator
+                dominante no desempenho global. O tempo total desceu de \textbf{10033 ms} ($p=1$) para
+                \textbf{5074 ms} ($p=2$) e \textbf{3071 ms} ($p=4$), reduções de ~50\% e ~69\% respetivamente.
+                O turnaround médio por job acompanha esta tendência, de 6382 ms para 1964 ms entre os extremos.
+                O comportamento aproxima-se do modelo teórico $T_{seq} / p$, com um overhead residual de 50--70 ms
+                atribuível à latência de comunicação via FIFO. No cenário de \textit{throughput} com carga
+                distribuída por 3 utilizadores, FCFS e RR produzem resultados praticamente idênticos, dado que
+                a fila já tem diversidade natural de utilizadores.
 
         \section{Conclusão}
 

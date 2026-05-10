@@ -190,12 +190,12 @@ int main(int argc, char *argv[]) {
                 char temp[256];
 
                 // Formato exacto do enunciado: --Executing / --Scheduled
-                strcat(out_buf, "--Executing\n");
+                strcat(out_buf, "---\nExecuting\n");
                 for (int i = 0; i < exec_count; i++) {
                     sprintf(temp, "user-id %d - command-id %d\n", executing[i].user_id, executing[i].command_id);
                     strcat(out_buf, temp);
                 }
-                strcat(out_buf, "--Scheduled\n");
+                strcat(out_buf, "---\nScheduled\n");
                 for (int i = 0; i < sched_count; i++) {
                     sprintf(temp, "user-id %d - command-id %d\n", scheduled[i].user_id, scheduled[i].command_id);
                     strcat(out_buf, temp);
