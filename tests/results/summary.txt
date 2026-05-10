@@ -1,22 +1,22 @@
 ==================================================================================
   RESULTADOS DOS TESTES DE ESCALONAMENTO — Projeto SO
-  sáb 02 mai 2026 00:00:00 WEST
+  Wed May  6 11:02:39 AM WEST 2026
 ==================================================================================
 
   Cenário     | Polít. | Par | Tempo Total | Turnaround Md | Espera User2 
   -------------+--------+-----+-------------+---------------+---------------
-  FAIRNESS     | FCFS   | 1   |     9027 ms |       5647 ms |       8506 ms
-  FAIRNESS     | FCFS   | 2   |     5021 ms |       3264 ms |       4497 ms
-  FAIRNESS     | FCFS   | 4   |     3019 ms |       2104 ms |       2494 ms
-  FAIRNESS     | RR     | 1   |     9033 ms |       5251 ms |       4502 ms
-  FAIRNESS     | RR     | 2   |     5074 ms |       3075 ms |       2547 ms
-  FAIRNESS     | RR     | 4   |     3024 ms |       2106 ms |       2500 ms
-  THROUGHPUT   | FCFS   | 1   |    10033 ms |       6382 ms |        —
-  THROUGHPUT   | FCFS   | 2   |     5074 ms |       3406 ms |        —
-  THROUGHPUT   | FCFS   | 4   |     3071 ms |       1964 ms |        —
-  THROUGHPUT   | RR     | 1   |    10030 ms |       6383 ms |        —
-  THROUGHPUT   | RR     | 2   |     5069 ms |       3405 ms |        —
-  THROUGHPUT   | RR     | 4   |     3071 ms |       1964 ms |        —
+  FAIRNESS     | FCFS   | 1   |     9061 ms |       5662 ms |       8513 ms
+  FAIRNESS     | FCFS   | 2   |     5048 ms |       3271 ms |       4499 ms
+  FAIRNESS     | FCFS   | 4   |     3042 ms |       2114 ms |       2494 ms
+  FAIRNESS     | RR     | 1   |     9059 ms |       5258 ms |       4500 ms
+  FAIRNESS     | RR     | 2   |     5101 ms |       3082 ms |       2544 ms
+  FAIRNESS     | RR     | 4   |     3039 ms |       2111 ms |       2488 ms
+  THROUGHPUT   | FCFS   | 1   |    10063 ms |       6390 ms |        —
+  THROUGHPUT   | FCFS   | 2   |     5103 ms |       3409 ms |        —
+  THROUGHPUT   | FCFS   | 4   |     3094 ms |       1970 ms |        —
+  THROUGHPUT   | RR     | 1   |    10073 ms |       6398 ms |        —
+  THROUGHPUT   | RR     | 2   |     5103 ms |       3409 ms |        —
+  THROUGHPUT   | RR     | 4   |     3096 ms |       1973 ms |        —
 
 ==================================================================================
   Testes concluídos. Logs detalhados em: ./tests/results/

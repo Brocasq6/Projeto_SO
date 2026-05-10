@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     Message msg;
 
     // LOOP PRINCIPAL
-    while (!shutdown_requested || exec_count > 0) {
+    while (!shutdown_requested || exec_count > 0 || sched_count > 0) {
         if (read(fd_server, &msg, sizeof(Message)) <= 0) {
             continue;
         }
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
         if (msg.msg_type == MSG_SHUTDOWN) {
             shutdown_requested = 1;
             shutdown_runner_pid = msg.runner_pid;
-            if (exec_count == 0) break;
+            if (exec_count == 0 && sched_count == 0) break;
         }
 
         // CADEIA DE DECISÃO 1: Foi pedido um novo comando?
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
                 exec_count--;
 
                 // Se shutdown pedido e não há mais jobs, sair do loop
-                if (shutdown_requested && exec_count == 0) {
+                if (shutdown_requested && exec_count == 0 && sched_count == 0) {
                     break;
                 }
             }
@@ -189,7 +189,6 @@ int main(int argc, char *argv[]) {
                 char out_buf[4096] = {0};
                 char temp[256];
 
-                // Formato exacto do enunciado: --Executing / --Scheduled
                 strcat(out_buf, "---\nExecuting\n");
                 for (int i = 0; i < exec_count; i++) {
                     sprintf(temp, "user-id %d - command-id %d\n", executing[i].user_id, executing[i].command_id);

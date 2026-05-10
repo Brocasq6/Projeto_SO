@@ -136,7 +136,7 @@
 
         \paragraph{Consulta (\texttt{-c}).} O controller faz \texttt{fork()} para o filho compor a resposta sem bloquear o loop principal. O filho escreve as listas \texttt{-{}-Executing} e \texttt{-{}-Scheduled} no FIFO privado do runner e termina (ver \ref{sec:filhos-c}).
 
-        \paragraph{Encerramento (\texttt{-s}).} O controller marca \texttt{shutdown\_requested} e deixa de aceitar novos \texttt{MSG\_EXECUTE}, mas continua a tratar os jobs em curso. Quando a fila de execução fica vazia, faz \texttt{unlink()} ao FIFO público e confirma ao runner que pediu o shutdown.
+        \paragraph{Encerramento (\texttt{-s}).} O controller marca \texttt{shutdown\_requested} e deixa de aceitar novos \texttt{MSG\_EXECUTE}, mas continua a tratar os jobs em curso e em espera. Quando ambas as filas ficam vazias, faz \texttt{unlink()} ao FIFO público e confirma ao runner que pediu o shutdown.
 
         \subsection{Recolha dos filhos do \texttt{-c}}
         \label{sec:filhos-c}

@@ -114,7 +114,6 @@ void exec_pipeline(Segment *segments, int number_segments) {
 
             // 2. Depois aplicar redirecionamentos de ficheiro (sobrepõem pipes)
 
-            // BUG CORRIGIDO: era dup2(fd, STDOUT_FILENO)
             if (segments[i].stdin_file != NULL) {
                 int fd = open(segments[i].stdin_file, O_RDONLY);
                 if (fd == -1) { perror("Erro ao abrir ficheiro de entrada"); exit(1); }
@@ -122,7 +121,6 @@ void exec_pipeline(Segment *segments, int number_segments) {
                 close(fd);
             }
 
-            // BUG CORRIGIDO: estava a abrir stdder_file em vez de stdout_file
             if (segments[i].stdout_file != NULL) {
                 int fd = open(segments[i].stdout_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
                 if (fd == -1) { perror("Erro ao abrir ficheiro de saída"); exit(1); }
@@ -130,7 +128,6 @@ void exec_pipeline(Segment *segments, int number_segments) {
                 close(fd);
             }
 
-            // BUG CORRIGIDO: faltava ; no fim do open()
             if (segments[i].stdder_file != NULL) {
                 int fd = open(segments[i].stdder_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
                 if (fd == -1) { perror("Erro ao abrir ficheiro de erros"); exit(1); }
